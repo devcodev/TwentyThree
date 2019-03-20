@@ -261,7 +261,6 @@ HRESULT DX::CreateCB_WVP()
 {
 	HRESULT hr = S_OK;
 
-
 	// Create the constant buffer
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DEFAULT;
@@ -272,8 +271,28 @@ HRESULT DX::CreateCB_WVP()
     
 	if( FAILED( hr ) )
         return hr;
+
 	return hr;
 }
+
+HRESULT DX::CreateCB_Color(Surface *surface)
+{
+	HRESULT hr = S_OK;
+
+	// Create the constant buffer
+	D3D11_BUFFER_DESC bd = {};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(CB_Color);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = 0;
+	hr = pDevice->CreateBuffer( &bd, nullptr, &surface->pCB_Color );
+    
+	if( FAILED( hr ) )
+        return hr;
+
+	return hr;
+}
+
 
 #include <d3dcompiler.h>
 #pragma comment(lib,"d3dcompiler.lib")
@@ -406,6 +425,9 @@ void DX::DrawSurface(Surface *surface)
 	cbwvp.mProjection = XMMatrixTranspose( projection );
 	pImmediateContext->UpdateSubresource( pConstantBuffer, 0, nullptr, &cbwvp, 0, 0 );
 
+	CB_Color cbcolor;
+	cbcolor.color = DirectX::XMFLOAT4(surface->color);
+
 	// Clear the back buffer 
 	pImmediateContext->ClearRenderTargetView( pRenderTargetView, surface->color );
 
@@ -415,6 +437,7 @@ void DX::DrawSurface(Surface *surface)
 	pImmediateContext->VSSetShader( surface->pVertexShader, nullptr, 0 );
 	pImmediateContext->VSSetConstantBuffers( 0, 1, &pConstantBuffer );
 	pImmediateContext->PSSetShader( surface->pPixelShader, nullptr, 0 );
+	pImmediateContext->PSSetConstantBuffers( 0, 1, &surface->pCB_Color );
     pImmediateContext->DrawIndexed( 6, 0, 0 );
     //pImmediateContext->Draw(4,0);
 

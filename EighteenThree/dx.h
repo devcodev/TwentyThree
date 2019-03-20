@@ -20,6 +20,7 @@ public:
 	void SetViewport();
 	void SetWVP();
 	HRESULT CreateCB_WVP();
+	HRESULT CreateCB_Color(Surface *surface);
 
 	HRESULT CreateSurface(Surface *surface);
 	void DrawSurface(Surface *surface);

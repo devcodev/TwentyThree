@@ -20,13 +20,17 @@ const WORD indices[6] =
     0,2,3,
 };
 
+struct CB_Color
+{
+	DirectX::XMFLOAT4 color;
+};
+
 class Surface
 {
 public:
 	Surface();
 	Surface(DirectX::XMFLOAT2 pos, float width, float height, float col[4]);
 	~Surface();
-
 
 //private:
 	DirectX::XMFLOAT2 position; // top left of rect
@@ -41,6 +45,7 @@ public:
 	ID3D11InputLayout *pVertexLayout;
 	ID3D11Buffer *pVertexBuffer;
 	ID3D11Buffer *pIndexBuffer;
+	ID3D11Buffer *pCB_Color;
 
 };
 
