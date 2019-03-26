@@ -25,6 +25,9 @@ struct CB_Color
 	DirectX::XMFLOAT4 color;
 };
 
+#define SURFACEVERTEXCOUNT 4
+#define SURFACEINDEXCOUNT 6
+
 class Surface
 {
 public:
@@ -43,9 +46,10 @@ public:
 	ID3D11VertexShader *pVertexShader;
 	ID3D11PixelShader *pPixelShader;
 	ID3D11InputLayout *pVertexLayout;
-	ID3D11Buffer *pVertexBuffer;
-	ID3D11Buffer *pIndexBuffer;
 	ID3D11Buffer *pCB_Color;
+
+	UINT startIndex;
+	int baseVertex;
 
 };
 

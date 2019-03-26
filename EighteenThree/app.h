@@ -13,7 +13,7 @@ public:
 	~App();
 
 	GAMESTATE state;
-	Surface ListSurface[2];
+	Surface ListSurface[32];
 
 	void CreateMainWindow();
 	void ShowMainWindow();

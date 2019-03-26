@@ -30,7 +30,7 @@
     <ClInclude Include="ui.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="surface_basic.hlsl">
+    <FxCompile Include="surface_basic_VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>

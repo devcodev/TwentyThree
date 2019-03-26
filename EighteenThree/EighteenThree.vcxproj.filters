@@ -40,7 +40,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="surface_basic.hlsl" />
     <FxCompile Include="surface_basic_PS.hlsl" />
+    <FxCompile Include="surface_basic_VS.hlsl" />
   </ItemGroup>
 </Project>

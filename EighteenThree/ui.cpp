@@ -1,11 +1,15 @@
 #include "ui.h"
 
 Surface::Surface()
+	:startIndex(0),
+	baseVertex(0)
 {
 
 }
 
 Surface::Surface(DirectX::XMFLOAT2 pos, float width, float height,  float col[4])
+	:startIndex(0),
+	baseVertex(0)
 {
 	// position is top left of rect
 	position = pos;

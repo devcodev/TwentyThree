@@ -20,12 +20,23 @@ public:
 	void SetViewport();
 	void SetWVP();
 	HRESULT CreateCB_WVP();
-	HRESULT CreateCB_Color(Surface *surface);
-
-	HRESULT CreateSurface(Surface *surface);
-	void DrawSurface(Surface *surface);
-
 	void ClearScreen(float color[4]);
+	void Present();
+	
+	// 
+	void AddVertices(void *vertices, UINT cntVertices);
+	HRESULT SetVB();
+	void AddIndices(WORD *indices, UINT cntIndices);
+	HRESULT SetIB();
+	HRESULT SetPixelShader( const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3D11PixelShader **pPixelShader );
+	void SetTopo(D3D_PRIMITIVE_TOPOLOGY topo);
+	void SetCBVS();
+
+	// surface
+	HRESULT CreateSurface(Surface *surface);
+	HRESULT SetSurfaceShadersAndLayout( const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, Surface *surface);
+	void DrawSurface(Surface *surface);
+	HRESULT CreateCB_Color(Surface *surface);
 
 private:
 	HWND hWnd;
@@ -46,6 +57,14 @@ private:
 	DirectX::XMMATRIX world;
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
+
+	UINT cVertices;
+	DirectX::XMFLOAT3 vData[4096];
+	ID3D11Buffer *pVertexBuffer;
+	UINT cIndices;
+	WORD iData[4096];
+	ID3D11Buffer *pIndexBuffer;
+
 
 };
 

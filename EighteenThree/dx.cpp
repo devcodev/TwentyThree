@@ -8,7 +8,9 @@ struct CB_WVP
 };
 
 DX::DX(HWND hWnd)
-	:hWnd(hWnd)
+	:hWnd(hWnd),
+	cVertices(0),
+	cIndices(0)
 {
 
 }
@@ -333,9 +335,129 @@ HRESULT DX::CreateSurface(Surface *surface)
 {
 	HRESULT hr = S_OK;
 
-		// Compile the vertex shader
+	SetSurfaceShadersAndLayout( L"surface_basic_VS.hlsl", "main", "vs_4_0", surface);
+	
+	surface->startIndex = cIndices;
+	AddIndices(const_cast<WORD*>(indices), SURFACEINDEXCOUNT);
+	surface->baseVertex = cVertices;
+	AddVertices((void*)surface->vertices, SURFACEVERTEXCOUNT);
+
+
+	D3D11_BUFFER_DESC bd = {};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(CB_Color);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = 0;
+	hr = pDevice->CreateBuffer( &bd, nullptr, &surface->pCB_Color );
+	if( FAILED( hr ) )
+        return hr;
+
+	return hr;
+}
+
+void DX::DrawSurface(Surface *surface)
+{
+	SetCBVS();
+
+	CB_Color cbcolor;
+	cbcolor.color = DirectX::XMFLOAT4(surface->color);
+	pImmediateContext->UpdateSubresource( surface->pCB_Color, 0, nullptr, &cbcolor, 0, 0 );
+
+	SetTopo(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // Render a quad
+	pImmediateContext->VSSetShader( surface->pVertexShader, nullptr, 0 );
+	pImmediateContext->PSSetShader( surface->pPixelShader, nullptr, 0 );
+	pImmediateContext->PSSetConstantBuffers( 0, 1, &surface->pCB_Color );
+	//pImmediateContext->DrawIndexed( 6, 0, 0 );
+	pImmediateContext->DrawIndexed( 6, surface->startIndex, 0 );
+
+}
+
+void DX::ClearScreen(float color[4])
+{
+	// Clear the back buffer 
+	pImmediateContext->ClearRenderTargetView( pRenderTargetView, color );
+}
+
+void DX::Present()
+{
+	pSwapChain->Present( 0, 0 );
+}
+
+void DX::AddVertices(void *vertices, UINT cntVertices)
+{
+	DirectX::XMFLOAT3 *dst = vData + cVertices;
+	memcpy(dst,vertices,sizeof(DirectX::XMFLOAT3)*cntVertices);
+	cVertices += cntVertices;
+}
+
+HRESULT DX::SetVB()
+{
+	HRESULT hr = S_OK;
+
+	D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof( DirectX::XMFLOAT3 ) * cVertices;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA InitData = {};
+	InitData.pSysMem = vData;
+	hr = pDevice->CreateBuffer( &bd, &InitData, &pVertexBuffer );
+    if( FAILED( hr ) )
+        return hr;
+
+    // Set vertex buffer
+    UINT stride = sizeof( DirectX::XMFLOAT3 );
+    UINT offset = 0;
+    pImmediateContext->IASetVertexBuffers( 0, 1, &pVertexBuffer, &stride, &offset );
+	
+	return hr;
+}
+
+void DX::AddIndices(WORD *indices, UINT cntIndices)
+{
+	WORD *dst = iData + cIndices;
+	for(size_t i = 0; i<cntIndices; ++i){
+		*dst = indices[i] + cVertices;
+		++dst;
+	}
+	cIndices += cntIndices;
+}
+
+HRESULT DX::SetIB()
+{
+	HRESULT hr = S_OK;
+
+	D3D11_BUFFER_DESC bd = {};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof( WORD ) * cIndices;
+    bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA InitData = {};
+	InitData.pSysMem = iData;
+    hr = pDevice->CreateBuffer( &bd, &InitData, &pIndexBuffer );
+    if( FAILED( hr ) )
+        return hr;
+
+    // Set index buffer
+    pImmediateContext->IASetIndexBuffer( pIndexBuffer, DXGI_FORMAT_R16_UINT, 0 );
+    
+	if( FAILED( hr ) )
+        return hr;
+
+	return hr;
+}
+
+HRESULT DX::SetSurfaceShadersAndLayout( const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, Surface *surface )
+{
+	HRESULT hr = S_OK;
+	
+	// Compile the vertex shader
 	ID3DBlob* pVSBlob = nullptr;
-    hr = CompileShaderFromFile( L"surface_basic.hlsl", "main", "vs_4_0", &pVSBlob );
+    hr = CompileShaderFromFile( szFileName, szEntryPoint, szShaderModel, &pVSBlob );
     if( FAILED( hr ) )
     {
         MessageBox( nullptr,
@@ -355,7 +477,6 @@ HRESULT DX::CreateSurface(Surface *surface)
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        //{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	UINT numElements = ARRAYSIZE( layout );
 
@@ -369,9 +490,20 @@ HRESULT DX::CreateSurface(Surface *surface)
     // Set the input layout
     pImmediateContext->IASetInputLayout( surface->pVertexLayout );
 
+	hr = SetPixelShader(L"surface_basic_PS.hlsl", "main", "ps_4_0", &surface->pPixelShader);
+	if( FAILED( hr ) )
+		return hr;
+
+	return hr;
+}
+
+HRESULT DX::SetPixelShader( const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3D11PixelShader **pPixelShader )
+{
+	HRESULT hr = S_OK;
+	
 	// Compile the pixel shader
 	ID3DBlob* pPSBlob = nullptr;
-    hr = CompileShaderFromFile( L"surface_basic_PS.hlsl", "main", "ps_4_0", &pPSBlob );
+	hr = CompileShaderFromFile( szFileName, szEntryPoint, szShaderModel, &pPSBlob );
     if( FAILED( hr ) )
     {
         MessageBox( nullptr,
@@ -380,44 +512,20 @@ HRESULT DX::CreateSurface(Surface *surface)
     }
 
 	// Create the pixel shader
-	hr = pDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &surface->pPixelShader );
+	hr = pDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, pPixelShader );
 	pPSBlob->Release();
     if( FAILED( hr ) )
         return hr;
 
-	D3D11_BUFFER_DESC bd = {};
-    bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof( DirectX::XMFLOAT3 ) * 4;
-    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA InitData = {};
-	InitData.pSysMem = surface->vertices;
-	hr = pDevice->CreateBuffer( &bd, &InitData, &surface->pVertexBuffer );
-    if( FAILED( hr ) )
-        return hr;
-
-    // Set vertex buffer
-    UINT stride = sizeof( DirectX::XMFLOAT3 );
-    UINT offset = 0;
-    pImmediateContext->IASetVertexBuffers( 0, 1, &surface->pVertexBuffer, &stride, &offset );
-
-	bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( WORD ) * 6;
-    bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-    InitData.pSysMem = indices;
-    hr = pDevice->CreateBuffer( &bd, &InitData, &surface->pIndexBuffer );
-    if( FAILED( hr ) )
-        return hr;
-
-    // Set index buffer
-    pImmediateContext->IASetIndexBuffer( surface->pIndexBuffer, DXGI_FORMAT_R16_UINT, 0 );
-
 	return hr;
 }
 
-void DX::DrawSurface(Surface *surface)
+void DX::SetTopo(D3D_PRIMITIVE_TOPOLOGY topo)
+{
+	pImmediateContext->IASetPrimitiveTopology(topo);
+}
+
+void DX::SetCBVS()
 {
 	CB_WVP cbwvp;
 	cbwvp.mWorld = XMMatrixTranspose( world );
@@ -425,31 +533,5 @@ void DX::DrawSurface(Surface *surface)
 	cbwvp.mProjection = XMMatrixTranspose( projection );
 	pImmediateContext->UpdateSubresource( pConstantBuffer, 0, nullptr, &cbwvp, 0, 0 );
 
-	CB_Color cbcolor;
-	cbcolor.color = DirectX::XMFLOAT4(surface->color);
-
-	// Clear the back buffer 
-	pImmediateContext->ClearRenderTargetView( pRenderTargetView, surface->color );
-
-	pImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-
-    // Render a triangle
-	pImmediateContext->VSSetShader( surface->pVertexShader, nullptr, 0 );
 	pImmediateContext->VSSetConstantBuffers( 0, 1, &pConstantBuffer );
-	pImmediateContext->PSSetShader( surface->pPixelShader, nullptr, 0 );
-	pImmediateContext->PSSetConstantBuffers( 0, 1, &surface->pCB_Color );
-    pImmediateContext->DrawIndexed( 6, 0, 0 );
-    //pImmediateContext->Draw(4,0);
-
-    // Present the information rendered to the back buffer to the front buffer (the screen)
-    pSwapChain->Present( 0, 0 );
-}
-
-void DX::ClearScreen(float color[4])
-{
-	// Clear the back buffer 
-	pImmediateContext->ClearRenderTargetView( pRenderTargetView, color );
-
-	// Present the information rendered to the back buffer to the front buffer (the screen)
-	pSwapChain->Present( 0, 0 );
 }

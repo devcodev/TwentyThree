@@ -97,8 +97,14 @@ void App::MsgPump(DX *pdx)
 				DispatchMessage(&msg);
 			}
 			else{
+				float bg_color[4] = { 0.2f,0.2f,0.2f,1.0f };
+				pdx->ClearScreen(bg_color);
+
 				pdx->DrawSurface(&ListSurface[0]);
-				//pdx->DrawSurface(&ListSurface[1]);
+				pdx->DrawSurface(&ListSurface[1]);
+				pdx->DrawSurface(&ListSurface[2]);
+				
+				pdx->Present();
 			}
 		}
 	}
