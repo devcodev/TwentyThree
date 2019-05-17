@@ -29,6 +29,7 @@
     <ClInclude Include="app.h" />
     <ClInclude Include="dx.h" />
     <ClInclude Include="mswimg.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ui.h" />
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +45,22 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="EighteenThree.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\img\test-dxt1.dds" />
+    <Image Include="..\img\test-dxt5.dds" />
+    <Image Include="..\img\test.bmp" />
+    <Image Include="..\img\test.gif" />
+    <Image Include="..\img\test.jpg" />
+    <Image Include="..\img\test.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\img\test-dxt1.crn" />
+    <None Include="..\img\test-dxt5.crn" />
+    <None Include="..\img\test.tga" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CED7607A-17AF-43CA-8DD0-83C0F6D7B731}</ProjectGuid>
