@@ -22,11 +22,13 @@
     <ClCompile Include="app.cpp" />
     <ClCompile Include="dx.cpp" />
     <ClCompile Include="entrypoint.cpp" />
+    <ClCompile Include="mswimg.cpp" />
     <ClCompile Include="ui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="app.h" />
     <ClInclude Include="dx.h" />
+    <ClInclude Include="mswimg.h" />
     <ClInclude Include="ui.h" />
   </ItemGroup>
   <ItemGroup>

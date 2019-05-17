@@ -369,8 +369,7 @@ void DX::DrawSurface(Surface *surface)
 	pImmediateContext->VSSetShader( surface->pVertexShader, nullptr, 0 );
 	pImmediateContext->PSSetShader( surface->pPixelShader, nullptr, 0 );
 	pImmediateContext->PSSetConstantBuffers( 0, 1, &surface->pCB_Color );
-	//pImmediateContext->DrawIndexed( 6, 0, 0 );
-	pImmediateContext->DrawIndexed( 6, surface->startIndex, 0 );
+	pImmediateContext->DrawIndexed( SURFACEINDEXCOUNT, surface->startIndex, 0 );
 
 }
 
