@@ -1,5 +1,6 @@
 #include "mswimg.h"
 #include <Shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
 #include <wchar.h>
 
 MSWIMG::MSWIMG()
