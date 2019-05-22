@@ -1,5 +1,5 @@
 #include "mswimg.h"
-#include <Shlwapi.h>
+#include <Shlwapi.h> //PathFindExtensionW
 #pragma comment(lib, "shlwapi.lib")
 #include <wchar.h>
 
@@ -30,6 +30,8 @@ void MSWIMG::GetImageBytes(void *pImgData, const wchar_t *szFilename)
 	}else if(wmemcpy(ext, L"png", 3)==0){
 
 	}else if(wmemcpy(ext, L"bmp", 3)==0){
+
+	}else{
 
 	}
 	
